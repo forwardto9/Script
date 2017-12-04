@@ -5,8 +5,8 @@ sub new {
       "name" => undef,
       "age" => undef
     };
-
-bless($property, $class);
+  return bless($property, $class);
+}
 
 sub setPackage {
   my $self = shift;
@@ -20,6 +20,5 @@ sub getPackage {
    while (($key, $value) = each(%$self)) {
     printf "result $key:$value\n";
    }
-}
 }
 1;
