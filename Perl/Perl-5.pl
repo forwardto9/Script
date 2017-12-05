@@ -97,6 +97,15 @@ while (my $isExist = <STDIN>) {
 
 while (<DATA>) {
     chomp();
+    my ($findex, $name) = /\[\s*(\d{1,})]\s.+\/(.+o$)/;
+    if (length($findex) > 0) {
+        printf ("index =%s, name =%s\n", $findex, $name);    
+    }
+    
+}
+
+while (<DATA>) {
+    chomp();
     #方法一：
     #my($address, $size, $index, $symble) = /(.+\t)(.+\t)(.+]\s)([+|-].+\s.+)/;
     #printf ("address =%s, size =%s, index =%s, symble =%s\n", $address, $size, $index, $symble);
@@ -119,9 +128,20 @@ close(INPIPE);
 
 
 __DATA__
-0x00006480	0x000001A8	[  3] -[MXGJceInputStream readFloat:]
-0x0000C44C	0x00000084	[ 11] -[MXGSetting init]
-0x0000C4D0	0x00000048	[ 11] +[MXGSetting getInstance]
-0x0000C518	0x0000003C	[ 11] -[MXGSetting enableDebug:]
-0x0000C554	0x0000002C	[ 11] -[MXGSetting isEnableDebug]
-0x0000C580	0x00000078	[ 11] -[MXGSetting changeToDebugServer]
+[  1] /Users/uwei/Library/Developer/Xcode/DerivedData/XG-SDK-ggsxhibkpfjpaxaxgokulacxmrjb/Build/Intermediates/XG-SDK.build/Release-iphoneos/XG-SDK.build/Objects-normal/arm64/CocoaJCE.o
+[  2] /Users/uwei/Library/Developer/Xcode/DerivedData/XG-SDK-ggsxhibkpfjpaxaxgokulacxmrjb/Build/Intermediates/XG-SDK.build/Release-iphoneos/XG-SDK.build/Objects-normal/arm64/JceEnumHelper.o
+[  3] /Users/uwei/Library/Developer/Xcode/DerivedData/XG-SDK-ggsxhibkpfjpaxaxgokulacxmrjb/Build/Intermediates/XG-SDK.build/Release-iphoneos/XG-SDK.build/Objects-normal/arm64/JceInputStream.o
+[  4] /Users/uwei/Library/Developer/Xcode/DerivedData/XG-SDK-ggsxhibkpfjpaxaxgokulacxmrjb/Build/Intermediates/XG-SDK.build/Release-iphoneos/XG-SDK.build/Objects-normal/arm64/JceObject.o
+[  5] /Users/uwei/Library/Developer/Xcode/DerivedData/XG-SDK-ggsxhibkpfjpaxaxgokulacxmrjb/Build/Intermediates/XG-SDK.build/Release-iphoneos/XG-SDK.build/Objects-normal/arm64/JceObjectV2.o
+[  6] /Users/uwei/Library/Developer/Xcode/DerivedData/XG-SDK-ggsxhibkpfjpaxaxgokulacxmrjb/Build/Intermediates/XG-SDK.build/Release-iphoneos/XG-SDK.build/Objects-normal/arm64/JceOutputStream.o
+[  7] /Users/uwei/Library/Developer/Xcode/DerivedData/XG-SDK-ggsxhibkpfjpaxaxgokulacxmrjb/Build/Intermediates/XG-SDK.build/Release-iphoneos/XG-SDK.build/Objects-normal/arm64/JceStream.o
+[  8] /Users/uwei/Library/Developer/Xcode/DerivedData/XG-SDK-ggsxhibkpfjpaxaxgokulacxmrjb/Build/Intermediates/XG-SDK.build/Release-iphoneos/XG-SDK.build/Objects-normal/arm64/XGBaseModel.o
+[  9] /Users/uwei/Library/Developer/Xcode/DerivedData/XG-SDK-ggsxhibkpfjpaxaxgokulacxmrjb/Build/Intermediates/XG-SDK.build/Release-iphoneos/XG-SDK.build/Objects-normal/arm64/XGTpnsPushClickRsp.o
+[ 10] /Users/uwei/Library/Developer/Xcode/DerivedData/XG-SDK-ggsxhibkpfjpaxaxgokulacxmrjb/Build/Intermediates/XG-SDK.build/Release-iphoneos/XG-SDK.build/Objects-normal/arm64/XGSqlite.o
+0x00005D98	0x00000008	[  2] +[MXGJceEnumHelper etos:]
+0x00005DA0	0x00000008	[  2] +[MXGJceEnumHelper stoe:]
+0x00005DA8	0x00000094	[  2] +[MXGJceEnumHelper eto_s:]
+0x00005E3C	0x0000008C	[  2] +[MXGJceEnumHelper _stoe:]
+0x00005EC8	0x000000A8	[  3] +[MXGJceInputStream streamWithData:]
+0x00005F70	0x00000058	[  3] -[MXGJceInputStream init]
+0x00005FC8	0x00000038	[  3] -[MXGJceInputStream data]
