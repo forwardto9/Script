@@ -57,20 +57,23 @@ sub desc_sort_ofile {
 
 format  OBJECTFORMATTER =
 --------------------------------------------------
-@<<<<<<<<<<<<<<<<<<<<<< ^>>>>>>>>>>
-$object,$osize
---------------------------------------------------
+@<<<<<<<<<<<<<<<<<<<<<<
+$object
+^<<<<<
+$osize
 .
 
 select(STDOUT);
 $~ = OBJECTFORMATTER;
 
 foreach my $key (sort desc_sort_ofile(keys(%oFileSize))) {
-    # $object = $key;
-    # $osize = $oFileSize{$key};
-    #write ;
-    my $l = length($key);
-    my $ll = 100 - $l + 2;
-    my $f = "\t%-10s \t %".$ll."d\n";
-     printf ("$f", $key, $oFileSize{$key});
+     $object = $key;
+     $osize = $oFileSize{$key};
+    write ;
+    #my $value = $oFileSize{$key};
+    #my $lkey = length($key);
+    #my $lvlaue = length($value);
+    #my $ll = 100 - $lkey - $lvlaue;
+    #my $f = "%-".$ll."s%d\n";
+    # printf ("$f", $key, $oFileSize{$key}); #无法完全对齐的原因是大小写字符实际显示的长度
  }
