@@ -8,17 +8,23 @@ use constant SPACE => " ";
 
 
 my $imageFIlePath = "/Users/uwei/Library/Developer/Xcode/DerivedData/TestLinkMapWithOC-gmvzvpmjiwrokhdqdtmsmkungdwx/Build/Products/Debug/TestLinkMapWithOC";
-my $otoolCommand = "otool -";
+my $otoolCommand = "otool";
+my $optionChar = "-";
 my $segmentOption = "s";
 my $objcOption = "ov";
-my $otoolSegmentPipe = $otoolCommand.$segmentOption;
-my $otoolObjcClassPipe = $otoolCommand.$objcOption;
+my $disassembledOption = "V";
+my $otoolSegmentPipe = $otoolCommand.SPACE.$optionChar.$segmentOption;
+my $otoolObjcClassPipe = $otoolCommand.SPACE.$optionChar.$objcOption;
+my $otoolSeletorPipe = $otoolCommand.SPACE.$optionChar.$disassembledOption.SPACE.$optionChar.$segmentOption.SPACE;
 my $pipe = SPACE."|".SPACE;
 my $dataSegment = "__DATA";
 my $textSegment = "__TEXT";
 my $classlistSection = "__objc_classlist";
 my $classrefsSection = "__objc_classrefs";
+my $methodListSection = "__objc_methname";
+my $selectorrefsSection = "__objc_selrefs";
 my $classListPipe = $otoolSegmentPipe.SPACE.$dataSegment.SPACE.$classlistSection.SPACE.$imageFIlePath.$pipe;
+
 my @classList = ();
 open(OTOOIMAGE, "$classListPipe");
 while(<OTOOIMAGE>)
@@ -145,4 +151,50 @@ my @unusedClassesList = grep {!$refClasses{$_}} @allObjcClassesInfo;
 
 foreach my $a (@unusedClassesList) {
     printf("address = %s\n", $a);
+}
+
+printf("-----------------------------------all method-----------------------------------\n");
+
+my $methodListPipe = $otoolSeletorPipe.SPACE.$textSegment.SPACE.$methodListSection.SPACE.$imageFIlePath.$pipe;
+
+my @methodList = ();
+open(OTOOIMAGE, "$methodListPipe");
+while(<OTOOIMAGE>)
+{
+        chomp();
+        #dammy data:0000000100004148  callMethod:
+        my($address, $symbol) = /(.+)\s{2}(.+)/;
+        if( defined $symbol && defined $address)
+        {
+            push(@methodList, $symbol);
+        }
+}
+close(OTOOIMAGE);
+
+printf("-----------------------------------refs method-----------------------------------\n");
+
+my $methodrefsPipe = $otoolSeletorPipe.SPACE.$dataSegment.SPACE.$selectorrefsSection.SPACE.$imageFIlePath.$pipe;
+
+my @methodrefsList = ();
+open(OTOOIMAGE, "$methodrefsPipe");
+while(<OTOOIMAGE>)
+{
+        chomp();
+        #dammy data:0000000100005980  __TEXT:__objc_methname:alloc
+        my($address, $segment, $section, $symbol) = /(.+)\s{2}..(.{4}).(.{15}).(.+)/;
+        if( defined $symbol && defined $address)
+        {
+            push(@methodrefsList, $symbol);
+        }
+}
+close(OTOOIMAGE);
+
+printf("-----------------------------------unused method-----------------------------------\n");
+my %allSelectors = map{$_=>1} @methodList;
+my %refSelectors = map{$_=>1} @methodrefsList;
+#difference set
+my @unusedSelectorList = grep {!$refSelectors{$_}} @methodList;
+
+foreach my $a (@unusedSelectorList) {
+    printf("symbol = %s\n", $a);
 }
