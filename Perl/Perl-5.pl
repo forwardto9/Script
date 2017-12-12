@@ -36,7 +36,9 @@ printf "Your login name is $ENV{'LOGNAME'}\n";
 Me::hello("Perl");
 
 my $pkg = new MyPackage();
-$pkg->setPackage("uwei", "29");
+my @pkgArray = ("fuck1", "fuck2");
+#perl 集合数据类型中元素只能是标量，如果需要使用数组或者是散列，只能使用相应的指针
+$pkg->setPackage("uwei", "29", \@pkgArray);
 $pkg->getPackage;
 
 my $int = 9;
