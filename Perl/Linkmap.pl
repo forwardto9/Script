@@ -1,30 +1,35 @@
 #!/usr/local/bin/perl
 use diagnostics;
-#use strict;
-
-require("Object.pl");
+use strict;
 
 
-open(LINKMAPFILE, "XG-SDK-LinkMap-normal-arm64.txt");
+if (@ARGV)
+{
+ my $linkmapFilePath = $ARGV[0];
+ if (defined $linkmapFilePath)
+	{
+  open(LINKMAPFILE, $linkmapFilePath);
 
 #数组或者是散列中只能存标量
 my @objectFiles = ();
 my @objectSymbols = ();
-while(<LINKMAPFILE>) {
+while(<LINKMAPFILE>)
+{
     chomp();
     my @files = /\[\s*(\d{1,})]\s.+\/(.+o$)/;
-    my $fileO = $#files;
-    if ( $fileO > 0) {
+    if (@files)
+    {
         #将一个数组的指针(标量)传给另一个数组
         push(@objectFiles, \@files);
         #my ($findex, $name) = @files;
         #printf ("index =%s, name =%s\n", $findex, $name);
     }
-    
+
     my @symbols =  /(0x.{8})\t(0x.{8})\t\[\s*(\d{1,})]\s([+|-].+\s.+)/;
     #my @symbols =  /(0x.{8})\t0x.0+([1-9A-F]{1,})\t\[\s*(\d{1,})]\s([+|-].+\s.+)/;
-    my $symbolO = $#symbols;
-    if ($symbolO > 0) {
+
+    if (@symbols)
+    {
         push(@objectSymbols, \@symbols);
         #my($address, $size, $index, $symble) = @symbols;
         #printf ("address =%s, size =%s, index =%s, symble =%s\n", $address, $size, $index, $symble);
@@ -34,10 +39,12 @@ while(<LINKMAPFILE>) {
 close(LINKMAPFILE);
 
 my %oFileSize = (); #objectName => size
-foreach my $file (@objectFiles) {
+foreach my $file (@objectFiles)
+{
     my ($oIndex, $name) = ($file->[0], $file->[1]);
     my $objectSize = 0;
-    foreach my $symbol (@objectSymbols) {
+    foreach my $symbol (@objectSymbols)
+    {
         my($address, $size, $sIndex, $symble) = ( $symbol->[0], hex($symbol->[1]), $symbol->[2], $symbol->[3]);
         if ($sIndex == $oIndex) {
             $objectSize = $objectSize + $size;
@@ -46,14 +53,17 @@ foreach my $file (@objectFiles) {
         #printf ("address =%s, size =%s, index =%s, symble =%s\n", $symbol->[0], hex($symbol->[1]), $symbol->[2], $symbol->[3]);
     }
     $oFileSize{$name} = $objectSize;
-    
+
     #printf ("index =%s, name =%s\n", $oIndex, $name);
 }
 
-sub desc_sort_ofile {
+sub desc_sort_ofile
+{
     $oFileSize{$b} <=> $oFileSize{$a};
 }
 
+my $object;
+my $osize;
 
 format  OBJECTFORMATTER =
 --------------------------------------------------
@@ -64,10 +74,11 @@ $osize
 .
 
 select(STDOUT);
-$~ = OBJECTFORMATTER;
+$~ = 'OBJECTFORMATTER';
 
-foreach my $key (sort desc_sort_ofile(keys(%oFileSize))) {
-     $object = $key;
+foreach my $key (sort desc_sort_ofile(keys(%oFileSize)))
+{
+					$object = $key;
      $osize = $oFileSize{$key};
     write ;
     #my $value = $oFileSize{$key};
@@ -76,4 +87,10 @@ foreach my $key (sort desc_sort_ofile(keys(%oFileSize))) {
     #my $ll = 100 - $lkey - $lvlaue;
     #my $f = "%-".$ll."s%d\n";
     # printf ("$f", $key, $oFileSize{$key}); #无法完全对齐的原因是大小写字符实际显示的长度
- }
+} 
+}else {
+	printf ("Can't find the Linkmap file paramater in ARGV");
+}
+} else {
+	printf ("ARGV is empty");
+}
