@@ -5,9 +5,21 @@ use Data::Dumper;
 
 
 use constant SPACE => " ";
+my $imageFIlePath;
+if (@ARGV)
+{
+ $imageFIlePath = $ARGV[0];
+ if ((length $imageFIlePath) == 0) {
+	printf ("Can't find the image file paramater in ARGV");
+	exit 0;
+ }
+} else {
+	printf ("ARGV is empty");
+	exit 0;
+}
 
 
-my $imageFIlePath = "/Users/uwei/Library/Developer/Xcode/DerivedData/TestLinkMapWithOC-gmvzvpmjiwrokhdqdtmsmkungdwx/Build/Products/Debug/TestLinkMapWithOC";
+#my $imageFIlePath = "/Users/uwei/Library/Developer/Xcode/DerivedData/TestLinkMapWithOC-gmvzvpmjiwrokhdqdtmsmkungdwx/Build/Products/Debug/TestLinkMapWithOC";
 my $otoolCommand = "otool";
 my $optionChar = "-";
 my $segmentOption = "s";
@@ -24,7 +36,7 @@ my $classrefsSection = "__objc_classrefs";
 my $methodListSection = "__objc_methname";
 my $selectorrefsSection = "__objc_selrefs";
 my $classListPipe = $otoolSegmentPipe.SPACE.$dataSegment.SPACE.$classlistSection.SPACE.$imageFIlePath.$pipe;
-
+printf("-----------------------------------All Classes Address-----------------------------------\n");
 my @classList = ();
 open(OTOOIMAGE, "$classListPipe");
 while(<OTOOIMAGE>)
@@ -51,7 +63,7 @@ foreach my $a (@classList)
     printf("address = %s\n", $a);
 }
 
-printf("----------------------------------------------------------------------\n");
+printf("----------------------------------References Classes Address------------------------------------\n");
 
 my $classRefsPipe = $otoolSegmentPipe.SPACE.$dataSegment.SPACE.$classrefsSection.SPACE.$imageFIlePath.$pipe;
 my @classRefsList = ();
@@ -81,7 +93,7 @@ foreach my $a (@classRefsList) {
     printf("address = %s\n", $a);
 }
 
-printf("----------------------------------------------------------------------\n");
+printf("-------------------------------------Unused Classes Address---------------------------------\n");
 
 my %hashClassList = map{$_=>1} @classList;
 my %hashClassRefsList = map{$_=>1} @classRefsList;
@@ -131,18 +143,18 @@ while(<OTOOIMAGE>)
 }
 close(OTOOIMAGE);
 
-printf("----------------------------------all classes------------------------------------\n");
+printf("----------------------------------All  Classes------------------------------------\n");
 foreach my $a (@allObjcClassesInfo) {
     printf("%s\n", $a);
 }
 
-printf("----------------------------------reference classes------------------------------------\n");
+printf("----------------------------------Reference Classes------------------------------------\n");
 
 foreach my $a (@refClassesInfo) {
     printf("%s\n", $a);
 }
 
-printf("-----------------------------------unused classes-----------------------------------\n");
+printf("-----------------------------------Unused Classes-----------------------------------\n");
 
 my %allClasses = map{$_=>1} @allObjcClassesInfo;
 my %refClasses = map{$_=>1} @refClassesInfo;
@@ -153,7 +165,7 @@ foreach my $a (@unusedClassesList) {
     printf("address = %s\n", $a);
 }
 
-printf("-----------------------------------all method-----------------------------------\n");
+printf("-----------------------------------All Methods-----------------------------------\n");
 
 my $methodListPipe = $otoolSeletorPipe.SPACE.$textSegment.SPACE.$methodListSection.SPACE.$imageFIlePath.$pipe;
 
@@ -171,7 +183,11 @@ while(<OTOOIMAGE>)
 }
 close(OTOOIMAGE);
 
-printf("-----------------------------------refs method-----------------------------------\n");
+foreach my $a (@methodList) {
+    printf("symbol = %s\n", $a);
+}
+
+printf("-----------------------------------Reference Methods-----------------------------------\n");
 
 my $methodrefsPipe = $otoolSeletorPipe.SPACE.$dataSegment.SPACE.$selectorrefsSection.SPACE.$imageFIlePath.$pipe;
 
@@ -189,7 +205,11 @@ while(<OTOOIMAGE>)
 }
 close(OTOOIMAGE);
 
-printf("-----------------------------------unused method-----------------------------------\n");
+foreach my $a (@methodrefsList) {
+    printf("symbol = %s\n", $a);
+}
+
+printf("-----------------------------------Unused Methods-----------------------------------\n");
 my %allSelectors = map{$_=>1} @methodList;
 my %refSelectors = map{$_=>1} @methodrefsList;
 #difference set
