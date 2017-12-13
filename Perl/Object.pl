@@ -4,33 +4,35 @@ sub new {
   my $property =  {
     "name" => undef,
     "index" => undef,
-    "symbols" => undef
+    "symbols" => undef #only scalar
     };
-  bless($property, $class);
-  return $property;
+  
+  return bless($property, $class);
 };
 
 sub setProperty($$@) {
     my $self = shift;
-    my ($name, $index, @symbols) = @_;
+    #array ref is a scalar
+    my ($name, $index, $symbols) = @_;
     $self->{"name"} = $name;
     $self->{"index"} = $index;
-    $self->{"symbols"} = @symbols;
+    $self->{"symbols"} = $symbols;
 }
 
 sub getName {
     my $self = shift;
-    return $self ->{"name"};
+    return $self->{"name"};
 }
 
 sub getIndex {
     my $self = shift;
-    return $self ->{"index"};
+    return $self->{"index"};
 }
 
 sub getSymbols {
     my $self = shift;
-    return $self ->{"symbols"};
+    #get pointer to array(ref)
+    return $self->{"symbols"};
 }
 
 1;
