@@ -5,6 +5,16 @@ use Data::Dumper;
 
 
 use constant SPACE => " ";
+
+my $CPU_TYPE_ARM = "12";
+my $CPU_SUBTYPE_ARM_V7 = "9";
+my $CPU_SUBTYPE_ARM_V7S = "11";
+my $CPU_TYPE_ARM64 = "16777228";
+my $CPU_TYPE_X86_64 = "16777223";
+my $CPU_ARM64 = "arm64";
+
+
+
 my $imageFIlePath;
 if (@ARGV)
 {
@@ -25,6 +35,8 @@ my $optionChar = "-";
 my $segmentOption = "s";
 my $objcOption = "ov";
 my $disassembledOption = "V";
+my $headOption = "h";
+my $headPipe = $otoolCommand.SPACE.$optionChar.$headOption;
 my $otoolSegmentPipe = $otoolCommand.SPACE.$optionChar.$segmentOption;
 my $otoolObjcClassPipe = $otoolCommand.SPACE.$optionChar.$objcOption;
 my $otoolSeletorPipe = $otoolCommand.SPACE.$optionChar.$disassembledOption.SPACE.$optionChar.$segmentOption.SPACE;
@@ -35,6 +47,31 @@ my $classlistSection = "__objc_classlist";
 my $classrefsSection = "__objc_classrefs";
 my $methodListSection = "__objc_methname";
 my $selectorrefsSection = "__objc_selrefs";
+
+
+my $machOHeadPipe = $headPipe.SPACE.$imageFIlePath.$pipe;
+
+my $hasX86Arch = 0;
+my $hasARM64Arch = 0;
+open(HEAD, $machOHeadPipe) or die "Can not open mach-o file, $!";
+
+while(<HEAD>)
+{
+     chomp();
+     my $headLine = $_;
+     if ($headLine =~ /$CPU_TYPE_ARM64/) {
+      $hasARM64Arch = 1;
+      last;
+     }
+     
+     if ($headLine =~ /$CPU_TYPE_X86_64/) {
+      $hasX86Arch = 1;
+      last;
+     }
+ 
+}
+close(HEAD);
+
 my $classListPipe = $otoolSegmentPipe.SPACE.$dataSegment.SPACE.$classlistSection.SPACE.$imageFIlePath.$pipe;
 printf("-----------------------------------All Classes Address-----------------------------------\n");
 my @classList = ();
@@ -58,9 +95,9 @@ while(<OTOOIMAGE>)
 }
 close(OTOOIMAGE);
 
-foreach my $a (@classList)
+foreach my $item (@classList)
 {
-    printf("address = %s\n", $a);
+    printf("address = %s\n", $item);
 }
 
 printf("----------------------------------References Classes Address------------------------------------\n");
@@ -89,8 +126,8 @@ while(<OTOOIMAGE>)
 }
 close(OTOOIMAGE);
 
-foreach my $a (@classRefsList) {
-    printf("address = %s\n", $a);
+foreach my $item (@classRefsList) {
+    printf("address = %s\n", $item);
 }
 
 printf("-------------------------------------Unused Classes Address---------------------------------\n");
@@ -100,8 +137,8 @@ my %hashClassRefsList = map{$_=>1} @classRefsList;
 #difference set
 my @unusedClassList = grep {!$hashClassRefsList{$_}} @classList;
 
-foreach my $a (@unusedClassList) {
-    printf("address = %s\n", $a);
+foreach my $item (@unusedClassList) {
+    printf("address = %s\n", $item);
 }
 
 my $objcClassStructInfoPipe = $otoolObjcClassPipe.SPACE.$imageFIlePath.$pipe;
@@ -109,13 +146,26 @@ my @allObjcClassesInfo = ();
 my @refClassesInfo = ();
 my $isStartClassRef = 0;
 open(OTOOIMAGE, "$objcClassStructInfoPipe");
+my $iOSFlag = 0;
 while(<OTOOIMAGE>)
 {
         chomp();
         my $currentLine = $_;
         # dummy data: 0000000100005328 0x100005d18 _OBJC_CLASS_$_test5
         #my @info = /^0.{15}\s(0x.{9})\s.+\$.(.+)/;
-
+        if($hasARM64Arch == 1)
+        {
+              if($iOSFlag == 0)
+              {
+                   if ($currentLine =~ /$CPU_ARM64/)
+                  {
+                       $iOSFlag = 1;
+                  }
+                  next;
+             }
+        }
+        
+        
         if ($currentLine eq "Contents of (__DATA,__objc_protolist) section")
             {
                 last;
@@ -126,7 +176,7 @@ while(<OTOOIMAGE>)
                 $isStartClassRef = 1;
                 next;
             }
-
+            #00000001000080a0 0x100009008 _OBJC_CLASS_$_TestClass
         if ($currentLine =~  /^0.{15}\s0x.{9}\s.+\$.+/)
         {
             my $targetString = substr($currentLine, 17);
@@ -144,14 +194,14 @@ while(<OTOOIMAGE>)
 close(OTOOIMAGE);
 
 printf("----------------------------------All  Classes------------------------------------\n");
-foreach my $a (@allObjcClassesInfo) {
-    printf("%s\n", $a);
+foreach my $item (@allObjcClassesInfo) {
+    printf("%s\n", $item);
 }
 
 printf("----------------------------------Reference Classes------------------------------------\n");
 
-foreach my $a (@refClassesInfo) {
-    printf("%s\n", $a);
+foreach my $item (@refClassesInfo) {
+    printf("%s\n", $item);
 }
 
 printf("-----------------------------------Unused Classes-----------------------------------\n");
@@ -161,8 +211,8 @@ my %refClasses = map{$_=>1} @refClassesInfo;
 #difference set
 my @unusedClassesList = grep {!$refClasses{$_}} @allObjcClassesInfo;
 
-foreach my $a (@unusedClassesList) {
-    printf("address = %s\n", $a);
+foreach my $item (@unusedClassesList) {
+    printf("address = %s\n", $item);
 }
 
 printf("-----------------------------------All Methods-----------------------------------\n");
@@ -170,6 +220,7 @@ printf("-----------------------------------All Methods--------------------------
 my $methodListPipe = $otoolSeletorPipe.SPACE.$textSegment.SPACE.$methodListSection.SPACE.$imageFIlePath.$pipe;
 
 my @methodList = ();
+my @methodAddressList = ();
 open(OTOOIMAGE, "$methodListPipe");
 while(<OTOOIMAGE>)
 {
@@ -179,12 +230,17 @@ while(<OTOOIMAGE>)
         if( defined $symbol && defined $address)
         {
             push(@methodList, $symbol);
+            push(@methodAddressList, $address);
         }
 }
 close(OTOOIMAGE);
 
-foreach my $a (@methodList) {
-    printf("symbol = %s\n", $a);
+foreach my $item (@methodList) {
+    printf("symbol = %s\n", $item);
+}
+
+foreach my $item (@methodAddressList) {
+    #printf("address = %s\n", $item);
 }
 
 printf("-----------------------------------Reference Methods-----------------------------------\n");
@@ -192,6 +248,7 @@ printf("-----------------------------------Reference Methods--------------------
 my $methodrefsPipe = $otoolSeletorPipe.SPACE.$dataSegment.SPACE.$selectorrefsSection.SPACE.$imageFIlePath.$pipe;
 
 my @methodrefsList = ();
+my @methodrefsAddressList = ();
 open(OTOOIMAGE, "$methodrefsPipe");
 while(<OTOOIMAGE>)
 {
@@ -201,12 +258,17 @@ while(<OTOOIMAGE>)
         if( defined $symbol && defined $address)
         {
             push(@methodrefsList, $symbol);
+            push(@methodrefsAddressList, $address);
         }
 }
 close(OTOOIMAGE);
 
-foreach my $a (@methodrefsList) {
-    printf("symbol = %s\n", $a);
+foreach my $item (@methodrefsList) {
+    printf("symbol = %s\n", $item);
+}
+
+foreach my $item (@methodrefsAddressList) {
+    #printf("address = %s\n", $item);
 }
 
 printf("-----------------------------------Unused Methods-----------------------------------\n");
@@ -215,6 +277,25 @@ my %refSelectors = map{$_=>1} @methodrefsList;
 #difference set
 my @unusedSelectorList = grep {!$refSelectors{$_}} @methodList;
 
-foreach my $a (@unusedSelectorList) {
-    printf("symbol = %s\n", $a);
+foreach my $item (@unusedSelectorList) {
+    printf("symbol = %s\n", $item);
 }
+
+my %allSelectorsAddress = map{$_=>1} @methodAddressList;
+my %refSelectorsAddress = map{$_=>1} @methodrefsAddressList;
+#difference set
+my @unusedSelectorAddressList = grep {!$refSelectorsAddress{$_}} @methodAddressList;
+foreach my $item (@unusedSelectorAddressList) {
+    #printf("address = %s\n", $item);
+}
+
+
+open(SYMBOL, "symbol.txt") or die "linkmap symbol file not exist!, $!";
+while (<SYMBOL>) {
+ chomp();
+ my ($symbolAddress,  $symbolSize, $symbolObjectFile,$symbolName) = /(0x.{8,})\s(.+)\s(.+)\s([+|-].+\s.+)/
+ 
+}
+close (SYMBOL);
+
+
