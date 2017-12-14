@@ -1,0 +1,9 @@
+1.根据linkmap文件找到symbol的size,并且与object关联
+2.在镜像文件中找到不可用的symbol，并确定symbol来自哪一个object。
+
+1输出结果是：
+address size objectFile  symbolName
+以上方案是失败的，原因是地址与mach-o解析的方法关联不上
+
+TODO:
+去除无效的方法方案中，需要过滤系统方法
