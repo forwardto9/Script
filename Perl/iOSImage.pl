@@ -12,7 +12,7 @@ my $CPU_SUBTYPE_ARM_V7S = "11";
 my $CPU_TYPE_ARM64 = "16777228";
 my $CPU_TYPE_X86_64 = "16777223";
 my $CPU_ARM64 = "arm64";
-
+sub isProperty($@);
 
 
 my $imageFIlePath;
@@ -146,7 +146,8 @@ my @allObjcClassesInfo = ();
 my @refClassesInfo = ();
 my $isStartClassRef = 0;
 open(OTOOIMAGE, "$objcClassStructInfoPipe");
-my $iOSFlag = 0;
+#为了防止非arm64的架构符号，现在又不需要了？
+my $iOSFatFlag = 0;
 while(<OTOOIMAGE>)
 {
         chomp();
@@ -155,14 +156,14 @@ while(<OTOOIMAGE>)
         #my @info = /^0.{15}\s(0x.{9})\s.+\$.(.+)/;
         if($hasARM64Arch == 1)
         {
-              if($iOSFlag == 0)
-              {
-                   if ($currentLine =~ /$CPU_ARM64/)
-                  {
-                       $iOSFlag = 1;
-                  }
-                  next;
-             }
+             # if($iOSFatFlag == 0)
+             # {
+             #      if ($currentLine =~ /$CPU_ARM64/)
+             #     {
+             #          $iOSFatFlag = 1;
+             #     }
+             #     next;
+             #}
         }
         
         
@@ -243,6 +244,8 @@ foreach my $item (@methodAddressList) {
     #printf("address = %s\n", $item);
 }
 
+
+
 printf("-----------------------------------Reference Methods-----------------------------------\n");
 
 my $methodrefsPipe = $otoolSeletorPipe.SPACE.$dataSegment.SPACE.$selectorrefsSection.SPACE.$imageFIlePath.$pipe;
@@ -257,8 +260,10 @@ while(<OTOOIMAGE>)
         my($address, $segment, $section, $symbol) = /(.+)\s{2}..(.{4}).(.{15}).(.+)/;
         if( defined $symbol && defined $address)
         {
-            push(@methodrefsList, $symbol);
+         if (! isProperty($symbol, @methodList)) {
+          push(@methodrefsList, $symbol);
             push(@methodrefsAddressList, $address);
+         }
         }
 }
 close(OTOOIMAGE);
@@ -275,11 +280,18 @@ printf("-----------------------------------Unused Methods-----------------------
 my %allSelectors = map{$_=>1} @methodList;
 my %refSelectors = map{$_=>1} @methodrefsList;
 #difference set
-my @unusedSelectorList = grep {!$refSelectors{$_}} @methodList;
+my @unusedSelectorListWithProperty = grep {!$refSelectors{$_}} @methodList;
+my @unusedSelectorList = ();
+foreach my $item (@unusedSelectorListWithProperty) {
+    if (! isProperty ($item, @unusedSelectorListWithProperty)) {
+     push (@unusedSelectorList, $item);
+    }
+}
 
 foreach my $item (@unusedSelectorList) {
     printf("symbol = %s\n", $item);
 }
+
 
 my %allSelectorsAddress = map{$_=>1} @methodAddressList;
 my %refSelectorsAddress = map{$_=>1} @methodrefsAddressList;
@@ -290,6 +302,45 @@ foreach my $item (@unusedSelectorAddressList) {
 }
 
 
+printf("-----------------------------------Property-----------------------------------\n");
+my @propertyList = ();
+
+foreach my $item (@unusedSelectorListWithProperty)
+{
+    if  ($item =~ /^_/)
+    {
+         my $propertyName = substr($item, 1);
+         my $propertyGetter = $propertyName;
+         my $firstC = substr($propertyName, 0,1);
+         my $restC = substr($propertyName, 1);
+         my $propertySetter = "set".uc($firstC).$restC.":";
+         #if ($propertyGetter ~~ @methodList) {
+         # printf ("find getter\n");
+         #}
+         my $findGetter = 0;
+         my $findSetter = 0;
+         if(grep { $propertyGetter eq $_ } @methodList )
+         {
+          $findGetter = 1;
+         }
+         if(grep { $propertySetter eq $_ } @methodList )
+         {
+          $findSetter = 1;
+         }
+         
+         if ($findGetter && $findSetter) {
+          push(@propertyList, $propertyName);
+         }
+     
+    }
+}
+
+
+foreach my $item (@propertyList) {
+    printf("unused  property = %s\n", $item);
+}
+
+
 open(SYMBOL, "symbol.txt") or die "linkmap symbol file not exist!, $!";
 while (<SYMBOL>) {
  chomp();
@@ -297,5 +348,37 @@ while (<SYMBOL>) {
  
 }
 close (SYMBOL);
+
+sub isProperty($@) {
+ my ($item, @list) = @_;
+ if  ($item =~ /^_/)
+    {
+         my $propertyName = substr($item, 1);
+         my $propertyGetter = $propertyName;
+         my $firstC = substr($propertyName, 0,1);
+         my $restC = substr($propertyName, 1);
+         my $propertySetter = "set".uc($firstC).$restC.":";
+         #if ($propertyGetter ~~ @methodList) {
+         # printf ("find getter\n");
+         #}
+         my $findGetter = 0;
+         my $findSetter = 0;
+         if(grep { $propertyGetter eq $_ } @list )
+         {
+          $findGetter = 1;
+         }
+         if(grep { $propertySetter eq $_ } @list )
+         {
+          $findSetter = 1;
+         }
+         
+         return $findGetter && $findSetter;
+     
+    }
+    else
+    {
+     return 0;
+    }
+}
 
 
