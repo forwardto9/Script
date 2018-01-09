@@ -16,7 +16,7 @@ my @objectSymbols = ();
 while(<LINKMAPFILE>)
 {
     chomp();
-    my @files = /\[\s*(\d{1,})]\s.+\/(.+o$)/;
+    my @files = /\[\s*(\d{1,})]\s.+\/(.+o\)$)/;
     if (@files)
     {
         #将一个数组的指针(标量)传给另一个数组
@@ -101,6 +101,8 @@ sub desc_sort_ofile
     $oFileSize{$b} <=> $oFileSize{$a};
 }
 
+my $summerySize = 0;
+
 my $object;
 my $osize;
 
@@ -119,14 +121,22 @@ foreach my $key (sort desc_sort_ofile(keys(%oFileSize)))
 {
 					$object = $key;
      $osize = $oFileSize{$key};
-    write ;
+     if ($object !~ /MTA/){
+     $summerySize += $osize;
+     write ;
+     }
+     
+    
     #my $value = $oFileSize{$key};
     #my $lkey = length($key);
     #my $lvlaue = length($value);
     #my $ll = 100 - $lkey - $lvlaue;
     #my $f = "%-".$ll."s%d\n";
     # printf ("$f", $key, $oFileSize{$key}); #无法完全对齐的原因是大小写字符实际显示的长度
-} 
+}
+
+printf("This image size is %s kb", $summerySize/1204);
+
 } else {
 	printf ("Can't find the Linkmap file paramater in ARGV");
 }

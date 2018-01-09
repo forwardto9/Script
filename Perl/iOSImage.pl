@@ -53,24 +53,43 @@ my $machOHeadPipe = $headPipe.SPACE.$imageFIlePath.$pipe;
 
 my $hasX86Arch = 0;
 my $hasARM64Arch = 0;
+my $hasARM7Arch = 0;
 open(HEAD, $machOHeadPipe) or die "Can not open mach-o file, $!";
 
 while(<HEAD>)
 {
      chomp();
      my $headLine = $_;
-     if ($headLine =~ /$CPU_TYPE_ARM64/) {
+     
+     my @headers = split(" ", $headLine);
+     if($#headers > 2) {
+      my $cupType = $headers[1];
+      
+      if ($cupType eq  $CPU_TYPE_ARM)
+     {
+      $hasARM7Arch = 1;
+      }
+     
+     if ($cupType eq  $CPU_TYPE_ARM64)
+     {
       $hasARM64Arch = 1;
-      last;
      }
      
-     if ($headLine =~ /$CPU_TYPE_X86_64/) {
+     if ($cupType eq $CPU_TYPE_X86_64)
+     {
       $hasX86Arch = 1;
-      last;
      }
- 
+      
+     }
+     
+     next;
+     
+     
 }
 close(HEAD);
+
+my $isFatFile = $hasARM64Arch && $hasARM7Arch;
+
 
 my $classListPipe = $otoolSegmentPipe.SPACE.$dataSegment.SPACE.$classlistSection.SPACE.$imageFIlePath.$pipe;
 printf("-----------------------------------All Classes Address-----------------------------------\n");
@@ -154,16 +173,16 @@ while(<OTOOIMAGE>)
         my $currentLine = $_;
         # dummy data: 0000000100005328 0x100005d18 _OBJC_CLASS_$_test5
         #my @info = /^0.{15}\s(0x.{9})\s.+\$.(.+)/;
-        if($hasARM64Arch == 1)
+        if($hasARM64Arch == 1 && $isFatFile)
         {
-             # if($iOSFatFlag == 0)
-             # {
-             #      if ($currentLine =~ /$CPU_ARM64/)
-             #     {
-             #          $iOSFatFlag = 1;
-             #     }
-             #     next;
-             #}
+              if($iOSFatFlag == 0)
+              {
+                   if ($currentLine =~ /$CPU_ARM64/)
+                  {
+                       $iOSFatFlag = 1;
+                  }
+                  next;
+             }
         }
         
         
@@ -260,8 +279,10 @@ while(<OTOOIMAGE>)
         my($address, $segment, $section, $symbol) = /(.+)\s{2}..(.{4}).(.{15}).(.+)/;
         if( defined $symbol && defined $address)
         {
-         if (! isProperty($symbol, @methodList)) {
-          push(@methodrefsList, $symbol);
+         my ($isPropertyGetter, $isPropertySetter) = isProperty($symbol, @methodList);
+         if (!($isPropertyGetter && $isPropertySetter))
+         {
+            push(@methodrefsList, $symbol);
             push(@methodrefsAddressList, $address);
          }
         }
@@ -283,7 +304,8 @@ my %refSelectors = map{$_=>1} @methodrefsList;
 my @unusedSelectorListWithProperty = grep {!$refSelectors{$_}} @methodList;
 my @unusedSelectorList = ();
 foreach my $item (@unusedSelectorListWithProperty) {
-    if (! isProperty ($item, @unusedSelectorListWithProperty)) {
+ my ($isPropertyGetter, $isPropertySetter) = isProperty($item, @unusedSelectorListWithProperty);
+    if (!($isPropertyGetter && $isPropertySetter)) {
      push (@unusedSelectorList, $item);
     }
 }
@@ -328,8 +350,25 @@ foreach my $item (@unusedSelectorListWithProperty)
           $findSetter = 1;
          }
          
+         
          if ($findGetter && $findSetter) {
-          push(@propertyList, $propertyName);
+          my $isRead = 0, my $isWrite = 0;
+           if(grep { $propertyGetter eq $_ } @methodrefsList )
+         {
+          $isRead = 1;
+          $propertyName = $propertyName."(readonly)";
+         }
+         if(grep { $propertySetter eq $_ } @methodrefsList )
+         {
+          $isWrite = 1;
+          $propertyName = $propertyName."(writeonly)";
+         }
+          
+          if (!($isWrite && $isRead))
+          {
+            push(@propertyList, $propertyName); 
+          }
+          
          }
      
     }
@@ -351,6 +390,8 @@ close (SYMBOL);
 
 sub isProperty($@) {
  my ($item, @list) = @_;
+ my $findGetter = 0;
+ my $findSetter = 0;
  if  ($item =~ /^_/)
     {
          my $propertyName = substr($item, 1);
@@ -361,24 +402,24 @@ sub isProperty($@) {
          #if ($propertyGetter ~~ @methodList) {
          # printf ("find getter\n");
          #}
-         my $findGetter = 0;
-         my $findSetter = 0;
+         
          if(grep { $propertyGetter eq $_ } @list )
          {
           $findGetter = 1;
          }
          if(grep { $propertySetter eq $_ } @list )
          {
-          $findSetter = 1;
+          $findSetter = 2;
          }
          
-         return $findGetter && $findSetter;
+          
      
     }
     else
     {
-     return 0;
     }
+    
+    return ($findGetter, $findSetter);
 }
 
 
