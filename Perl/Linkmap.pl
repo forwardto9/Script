@@ -16,7 +16,8 @@ my @objectSymbols = ();
 while(<LINKMAPFILE>)
 {
     chomp();
-    my @files = /\[\s*(\d{1,})]\s.+\/(.+o\)$)/;
+    #增加一个？进行模式匹配，在静态库中的目标文件会是以括号的形式呈现，而源码形式的目标文件是没有括号的   
+    my @files = /\[\s*(\d{1,})]\s.+\/(.+o\)?$)/;
     if (@files)
     {
         #将一个数组的指针(标量)传给另一个数组
@@ -108,9 +109,9 @@ my $osize;
 
 format  OBJECTFORMATTER =
 --------------------------------------------------
-@<<<<<<<<<<<<<<<<<<<<<<
+@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 $object
-^<<<<<
+^<<<<<<<<
 $osize
 .
 
@@ -121,10 +122,10 @@ foreach my $key (sort desc_sort_ofile(keys(%oFileSize)))
 {
 					$object = $key;
      $osize = $oFileSize{$key};
-     if ($object !~ /MTA/){
+     #if ($object !~ /MTA/){
      $summerySize += $osize;
      write ;
-     }
+     #}
      
     
     #my $value = $oFileSize{$key};
