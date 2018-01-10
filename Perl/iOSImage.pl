@@ -325,6 +325,8 @@ foreach my $item (@unusedSelectorAddressList) {
 
 
 printf("-----------------------------------Property-----------------------------------\n");
+my $wirteCount = 0;
+my $readCount = 0;
 my @propertyList = ();
 
 foreach my $item (@unusedSelectorListWithProperty)
@@ -357,11 +359,13 @@ foreach my $item (@unusedSelectorListWithProperty)
          {
           $isRead = 1;
           $propertyName = $propertyName."(readonly)";
+          $readCount++;
          }
          if(grep { $propertySetter eq $_ } @methodrefsList )
          {
           $isWrite = 1;
           $propertyName = $propertyName."(writeonly)";
+          $wirteCount++;
          }
           
           if (!($isWrite && $isRead))
@@ -378,6 +382,7 @@ foreach my $item (@unusedSelectorListWithProperty)
 foreach my $item (@propertyList) {
     printf("unused  property = %s\n", $item);
 }
+printf("read is %d, write is %d, property is %d", $readCount, $wirteCount, $#propertyList);
 
 
 open(SYMBOL, "symbol.txt") or die "linkmap symbol file not exist!, $!";
