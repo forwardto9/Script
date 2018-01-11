@@ -165,7 +165,6 @@ my @allObjcClassesInfo = ();
 my @refClassesInfo = ();
 my $isStartClassRef = 0;
 open(OTOOIMAGE, "$objcClassStructInfoPipe");
-#为了防止非arm64的架构符号，现在又不需要了？
 my $iOSFatFlag = 0;
 while(<OTOOIMAGE>)
 {
@@ -173,16 +172,13 @@ while(<OTOOIMAGE>)
         my $currentLine = $_;
         # dummy data: 0000000100005328 0x100005d18 _OBJC_CLASS_$_test5
         #my @info = /^0.{15}\s(0x.{9})\s.+\$.(.+)/;
-        if($hasARM64Arch == 1 && $isFatFile)
+        if($isFatFile && $iOSFatFlag == 0)
         {
-              if($iOSFatFlag == 0)
-              {
                    if ($currentLine =~ /$CPU_ARM64/)
                   {
                        $iOSFatFlag = 1;
                   }
                   next;
-             }
         }
         
         
@@ -238,13 +234,21 @@ foreach my $item (@unusedClassesList) {
 printf("-----------------------------------All Methods-----------------------------------\n");
 
 my $methodListPipe = $otoolSeletorPipe.SPACE.$textSegment.SPACE.$methodListSection.SPACE.$imageFIlePath.$pipe;
-
+$iOSFatFlag = 0;
 my @methodList = ();
 my @methodAddressList = ();
 open(OTOOIMAGE, "$methodListPipe");
 while(<OTOOIMAGE>)
 {
         chomp();
+         if($isFatFile && $iOSFatFlag == 0)
+        {
+                   if ($_ =~ /$CPU_ARM64/)
+                  {
+                       $iOSFatFlag = 1;
+                  }
+                  next;
+        }
         #dammy data:0000000100004148  callMethod:
         my($address, $symbol) = /(.+)\s{2}(.+)/;
         if( defined $symbol && defined $address)
@@ -268,13 +272,21 @@ foreach my $item (@methodAddressList) {
 printf("-----------------------------------Reference Methods-----------------------------------\n");
 
 my $methodrefsPipe = $otoolSeletorPipe.SPACE.$dataSegment.SPACE.$selectorrefsSection.SPACE.$imageFIlePath.$pipe;
-
+$iOSFatFlag = 0;
 my @methodrefsList = ();
 my @methodrefsAddressList = ();
 open(OTOOIMAGE, "$methodrefsPipe");
 while(<OTOOIMAGE>)
 {
         chomp();
+        if($isFatFile && $iOSFatFlag == 0)
+        {
+                   if ($_ =~ /$CPU_ARM64/)
+                  {
+                       $iOSFatFlag = 1;
+                  }
+                  next;
+        }
         #dammy data:0000000100005980  __TEXT:__objc_methname:alloc
         my($address, $segment, $section, $symbol) = /(.+)\s{2}..(.{4}).(.{15}).(.+)/;
         if( defined $symbol && defined $address)
@@ -305,7 +317,7 @@ my @unusedSelectorListWithProperty = grep {!$refSelectors{$_}} @methodList;
 my @unusedSelectorList = ();
 foreach my $item (@unusedSelectorListWithProperty) {
  my ($isPropertyGetter, $isPropertySetter) = isProperty($item, @unusedSelectorListWithProperty);
-    if (!($isPropertyGetter && $isPropertySetter)) {
+    if (!($isPropertyGetter && $isPropertySetter) && $item !~ /^_.+/) {
      push (@unusedSelectorList, $item);
     }
 }
@@ -324,7 +336,7 @@ foreach my $item (@unusedSelectorAddressList) {
 }
 
 
-printf("-----------------------------------Property-----------------------------------\n");
+printf("-----------------------------------Unused Property-----------------------------------\n");
 my $wirteCount = 0;
 my $readCount = 0;
 my @propertyList = ();
@@ -368,6 +380,12 @@ foreach my $item (@unusedSelectorListWithProperty)
           $wirteCount++;
          }
           
+          if($isWrite && $isRead)
+          {
+           $readCount--;
+           $wirteCount--;
+          }
+          
           if (!($isWrite && $isRead))
           {
             push(@propertyList, $propertyName); 
@@ -380,9 +398,9 @@ foreach my $item (@unusedSelectorListWithProperty)
 
 
 foreach my $item (@propertyList) {
-    printf("unused  property = %s\n", $item);
+    printf("property = %s\n", $item);
 }
-printf("read is %d, write is %d, property is %d", $readCount, $wirteCount, $#propertyList);
+printf("property count is %d,  readonly count is %d, writeonly count is %d, wr property count is %d", ($#propertyList + 1), $readCount, $wirteCount, ($#propertyList + 1) - ( $readCount+$wirteCount));
 
 
 open(SYMBOL, "symbol.txt") or die "linkmap symbol file not exist!, $!";
