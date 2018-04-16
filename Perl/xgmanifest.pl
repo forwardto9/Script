@@ -5,12 +5,24 @@ use Data::Dumper;
 
 use diagnostics;
 use strict;
+
 sub checkReceiver;
 
 printf "Start checking XML ....\n";
 
 
-my $manifestFile  = "/Users/uwei/Desktop/AndroidManifest.xml";
+my $manifestFile;
+if (@ARGV)
+{
+ $manifestFile = $ARGV[0];
+ if ((length $manifestFile) == 0) {
+        printf ("请输入内容完整的manifest文件的路径！如果是通过Jcenter集成，请使用Merged之后的文件!");
+        exit 0;
+ }
+} else {
+        printf ("请输入内容完整的manifest文件的路径！如果是通过Jcenter集成，请使用Merged之后的文件!");
+        exit 0;
+}
 
 open(MANIFEST, $manifestFile);
 
