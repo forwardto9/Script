@@ -1,10 +1,16 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -w
 
 use XML::Simple;
 #use Data::Dumper;
 
 use diagnostics;
 use strict;
+
+if ($^O =~ /MSWin/)
+{
+    use utf8;
+    binmode(STDOUT, ":encoding(gbk)");
+}
 
 sub checkReceiver;
 

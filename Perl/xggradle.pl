@@ -3,6 +3,13 @@
 use diagnostics;
 use strict;
 
+if ($^O =~ /MSWin/)
+{
+    use utf8;
+    binmode(STDOUT, ":encoding(gbk)");
+}
+
+
 my $gradleFile;
 if (@ARGV)
 {
