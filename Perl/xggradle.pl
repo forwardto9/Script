@@ -2,10 +2,10 @@
 
 use diagnostics;
 use strict;
+use utf8;
 
 if ($^O =~ /MSWin/)
 {
-    use utf8;
     binmode(STDOUT, ":encoding(gbk)");
 }
 
