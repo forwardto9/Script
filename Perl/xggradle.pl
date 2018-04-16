@@ -1,23 +1,20 @@
-#!/usr/local/bin/perl
+#!/usr/bin/perl -w
+
 use diagnostics;
 use strict;
-
-
 
 my $gradleFile;
 if (@ARGV)
 {
  $gradleFile = $ARGV[0];
  if ((length $gradleFile) == 0) {
-        printf ("请输入app目录下的Gradle文件路径！");
+        printf ("请输入app目录下的Gradle文件路径！\n");
         exit 0;
  }
 } else {
-        printf ("请输入app目录下的Gradle文件路径！");
+        printf ("请输入app目录下的Gradle文件路径！\n");
         exit 0;
 }
-
-
 
 open(GRADLE, $gradleFile);
 
