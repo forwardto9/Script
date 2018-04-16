@@ -2,7 +2,22 @@
 use diagnostics;
 use strict;
 
-my $gradleFile  = "/Users/uwei/Desktop/build.gradle";
+
+
+my $gradleFile;
+if (@ARGV)
+{
+ $gradleFile = $ARGV[0];
+ if ((length $gradleFile) == 0) {
+        printf ("请输入app目录下的Gradle文件路径！");
+        exit 0;
+ }
+} else {
+        printf ("请输入app目录下的Gradle文件路径！");
+        exit 0;
+}
+
+
 
 open(GRADLE, $gradleFile);
 
