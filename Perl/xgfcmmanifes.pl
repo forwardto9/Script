@@ -1,7 +1,7 @@
-#!/usr/local/bin/perl
+#!/usr/bin/perl -w
 
 use XML::Simple;
-use Data::Dumper;
+#use Data::Dumper;
 
 use diagnostics;
 use strict;
@@ -16,11 +16,11 @@ if (@ARGV)
 {
  $manifestFile = $ARGV[0];
  if ((length $manifestFile) == 0) {
-        printf ("请输入内容完整的manifest文件的路径！如果是通过Jcenter集成，请使用Merged之后的文件!");
+        printf ("请输入内容完整的manifest文件的路径！如果是通过Jcenter集成，请使用Merged之后的文件! \n");
         exit 0;
  }
 } else {
-        printf ("请输入内容完整的manifest文件的路径！如果是通过Jcenter集成，请使用Merged之后的文件!");
+        printf ("请输入内容完整的manifest文件的路径！如果是通过Jcenter集成，请使用Merged之后的文件! \n");
         exit 0;
 }
 
@@ -33,7 +33,6 @@ my $xmlData = $manifestXML->XMLin($manifestFile);
 
 foreach my $key (keys %$xmlData)
 {
-    print $key, "=", $xmlData->{$key}, "\n";
 
     #得到的都是对相应数据的引用
     my $dataRef = $xmlData->{$key};
