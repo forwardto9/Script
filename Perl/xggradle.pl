@@ -1,8 +1,9 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl
 
 use diagnostics;
 use strict;
 use utf8;
+#use open ':std', ':encoding(UTF-8)';
 
 if ($^O =~ /MSWin/)
 {
@@ -123,7 +124,7 @@ while (my($key, $value) = each(%xgJarInfo))
 {
     if ($value == 0)
     {
-         printf "$key jar package 不存在!  请在Gradle文件中添加编译依赖! \n";
+         printf "$key jar package 不存在!请在Gradle文件中添加编译依赖!\n";
     }
 }
 

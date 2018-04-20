@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl
 
 use XML::Simple;
 #use Data::Dumper;
@@ -96,7 +96,6 @@ foreach my $key (keys %$xmlData)
             }
         }
     } elsif ($key eq "uses-sdk") {
-        print $dataRef->{"android:minSdkVersion"}, "\n", $dataRef->{"android:targetSdkVersion"}, "\n";
         if ($dataRef->{"android:minSdkVersion"} < 8)
         {
             printf "android:minSdkVersion lower than 8, it is should set higher than 8 \n";
@@ -106,7 +105,7 @@ foreach my $key (keys %$xmlData)
         {
             printf "android:targetSdkVersion lower than 14, it is should set higher than 14 \n";
         }
-    } elsif($key eq "application") {
+    } elsif ($key eq "application") {
 
         #检查XG APP 配置信息
         my $metaData  = $dataRef->{"meta-data"};
