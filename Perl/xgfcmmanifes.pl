@@ -135,9 +135,10 @@ sub checkReceiver
     my $receiverData = shift(@_);
 
     my $count = 0;
-    my (@xgForceReceiverList, @xgForceReceiverIntentActionList) = @_;
-        my %xgForceReceiverIntentActionMap;
-        my %xgReceiverMap;
+    my @xgForceReceiverList = shift(@_);
+    my @xgForceReceiverIntentActionList = shift(@_);
+    my %xgForceReceiverIntentActionMap;
+    my %xgReceiverMap;
         if (ref($receiverData) eq "ARRAY")
         {
             $count = @{$receiverData};
@@ -145,7 +146,7 @@ sub checkReceiver
             {
                  for (my $i = 0; $i < $count; $i++)
                 {
-                    if ($receiverData->[$i]->{"android:name"} eq $receiver)
+                    if ($receiver =~ /$receiverData->[$i]->{"android:name"}/)
                     {
                         #检查XGPushReceiver的Intent
                         my $intentFilter = $receiverData->[$i]->{"intent-filter"};
@@ -156,12 +157,22 @@ sub checkReceiver
                             {
                                  for(my $j = 0 ; $j < $jcount; $j++)
                                 {
-                                    my $actionList = $intentFilter->[$j]->{"action"};
-
-                                    my $kcount = @{$actionList};
+                                    my $actionData = $intentFilter->[$j]->{"action"};
+                                    if (ref($actionData eq "ARRAY"))
+                                    {
+                                     my $kcount = @{$actionData};
                                     for (my $k = 0 ; $k < $kcount; $k++)
                                     {
-                                        if ($actionList->[$k]->{'android:name'} eq $action)
+                                        if ($action =~ /$actionData->[$k]->{'android:name'}/ )
+                                        {
+                                            $xgForceReceiverIntentActionMap{$action} = 1;
+                                            last;
+                                        } else {
+                                            $xgForceReceiverIntentActionMap{$action} = 0;
+                                        }
+                                    }
+                                    } elsif($actionData eq "HASH") {
+                                     if ($action =~ /$actionData->{'android:name'}/ )
                                         {
                                             $xgForceReceiverIntentActionMap{$action} = 1;
                                             last;
@@ -170,9 +181,38 @@ sub checkReceiver
                                         }
                                     }
 
+
                                     last;
                                 }
                             }
+                        } elsif (ref($intentFilter) eq "HASH") {
+                         foreach my $action (@xgForceReceiverIntentActionList)
+                            {
+                                    my $actionData = $intentFilter->{"action"};
+                                    if (ref($actionData) eq "HASH")
+                                    {
+                                     if ($action =~ /$actionData->{'android:name'}/ )
+                                        {
+                                            $xgForceReceiverIntentActionMap{$action} = 1;
+                                            last;
+                                        } else {
+                                            $xgForceReceiverIntentActionMap{$action} = 0;
+                                        }
+                                    } elsif(ref($actionData) eq "ARRAY") {
+                                         my $kcount = @{$actionData};
+                                         for (my $k = 0 ; $k < $kcount; $k++)
+                                            {
+                                               if ($action =~ /$actionData->[$k]->{'android:name'}/ )
+                                                {
+                                                    $xgForceReceiverIntentActionMap{$action} = 1;
+                                                    last;
+                                                } else {
+                                                    $xgForceReceiverIntentActionMap{$action} = 0;
+                                                }
+                                            }
+                                    }
+                            }
+
                         }
 
                         $xgReceiverMap{$receiver} = 1;
@@ -187,7 +227,7 @@ sub checkReceiver
             {
                 if ($value == 0)
                 {
-                    printf "$key is not exist \n";
+                    printf "$key is not exist ========= \n";
                 }
             }
 
@@ -195,15 +235,13 @@ sub checkReceiver
             {
                 if ($value == 0)
                 {
-                    printf "$key is not exist \n";
+                    printf "$key is not exist ==========\n";
                 }
             }
         } elsif (ref($receiverData) eq "HASH") {
-
-
             foreach my $receiver (@xgForceReceiverList)
             {
-                    if ($receiverData->{"android:name"} eq $receiver)
+                    if ($receiver =~ /$receiverData->{"android:name"}/ )
                     {
                         #检查XGPushReceiver的Intent
                         my $intentFilter = $receiverData->{"intent-filter"};
@@ -219,7 +257,7 @@ sub checkReceiver
                                     my $kcount = @{$actionList};
                                     for (my $k = 0 ; $k < $kcount; $k++)
                                     {
-                                        if ($actionList->[$k]->{'android:name'} eq $action)
+                                        if ($action =~ /$actionList->[$k]->{'android:name'}/)
                                         {
                                             $xgForceReceiverIntentActionMap{$action} = 1;
                                             last;
