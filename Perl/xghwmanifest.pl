@@ -93,7 +93,7 @@ foreach my $key (keys %$xmlData)
             {
                 my $activity = $activityData->[$i];
 
-                if ($activity->{"android:name"} eq "com.huawei.hms.activity.BridgeActivity")
+                if ("com.huawei.hms.activity.BridgeActivity" =~ /$activity->{"android:name"}/)
                 {
                     $xgActivityIsExist = 1;
                     if ($activity->{"android:exported"} eq "false")
@@ -124,7 +124,7 @@ foreach my $key (keys %$xmlData)
             {
                  for (my $i = 0; $i < $count; $i++)
                 {
-                    if ($serviceData->[$i]->{"android:name"} eq $service)
+                    if ($service =~ /$serviceData->[$i]->{"android:name"}/)
                     {
                         $xgServiceMap{$service} = 1;
                         if ($serviceData->[$i]->{"android:exported"} ne "true")
@@ -159,7 +159,7 @@ foreach my $key (keys %$xmlData)
             {
                  for (my $i = 0; $i < $count; $i++)
                 {
-                    if ($providerData->[$i]->{"android:name"} eq $provider)
+                    if ( $provider =~ /$providerData->[$i]->{"android:name"}/)
                     {
                         $xgProviderMap{$provider} = 1;
                         last;
@@ -188,6 +188,7 @@ foreach my $key (keys %$xmlData)
         @xgForceReceiverIntentActionList = ("com.huawei.android.push.intent.REGISTRATION", "com.huawei.android.push.intent.RECEIVE", "com.huawei.android.push.intent.CLICK", "com.huawei.intent.action.PUSH_STATE");
         checkReceiver($receiverData, @xgForceReceiverList, @xgForceReceiverIntentActionList);
 
+
     }
 
 }
@@ -199,9 +200,10 @@ sub checkReceiver
     my $receiverData = shift(@_);
 
     my $count = 0;
-    my (@xgForceReceiverList, @xgForceReceiverIntentActionList) = @_;
-        my %xgForceReceiverIntentActionMap;
-        my %xgReceiverMap;
+    my @xgForceReceiverList = shift(@_);
+    my @xgForceReceiverIntentActionList = shift(@_);
+    my %xgForceReceiverIntentActionMap;
+    my %xgReceiverMap;
         if (ref($receiverData) eq "ARRAY")
         {
             $count = @{$receiverData};
@@ -209,7 +211,7 @@ sub checkReceiver
             {
                  for (my $i = 0; $i < $count; $i++)
                 {
-                    if ($receiverData->[$i]->{"android:name"} eq $receiver)
+                    if ($receiver =~ /$receiverData->[$i]->{"android:name"}/)
                     {
                         #检查XGPushReceiver的Intent
                         my $intentFilter = $receiverData->[$i]->{"intent-filter"};
@@ -220,12 +222,22 @@ sub checkReceiver
                             {
                                  for(my $j = 0 ; $j < $jcount; $j++)
                                 {
-                                    my $actionList = $intentFilter->[$j]->{"action"};
-
-                                    my $kcount = @{$actionList};
+                                    my $actionData = $intentFilter->[$j]->{"action"};
+                                    if (ref($actionData eq "ARRAY"))
+                                    {
+                                     my $kcount = @{$actionData};
                                     for (my $k = 0 ; $k < $kcount; $k++)
                                     {
-                                        if ($actionList->[$k]->{'android:name'} eq $action)
+                                        if ($action =~ /$actionData->[$k]->{'android:name'}/ )
+                                        {
+                                            $xgForceReceiverIntentActionMap{$action} = 1;
+                                            last;
+                                        } else {
+                                            $xgForceReceiverIntentActionMap{$action} = 0;
+                                        }
+                                    }
+                                    } elsif($actionData eq "HASH") {
+                                     if ($action =~ /$actionData->{'android:name'}/ )
                                         {
                                             $xgForceReceiverIntentActionMap{$action} = 1;
                                             last;
@@ -234,9 +246,38 @@ sub checkReceiver
                                         }
                                     }
 
+
                                     last;
                                 }
                             }
+                        } elsif (ref($intentFilter) eq "HASH") {
+                         foreach my $action (@xgForceReceiverIntentActionList)
+                            {
+                                    my $actionData = $intentFilter->{"action"};
+                                    if (ref($actionData) eq "HASH")
+                                    {
+                                     if ($action =~ /$actionData->{'android:name'}/ )
+                                        {
+                                            $xgForceReceiverIntentActionMap{$action} = 1;
+                                            last;
+                                        } else {
+                                            $xgForceReceiverIntentActionMap{$action} = 0;
+                                        }
+                                    } elsif(ref($actionData) eq "ARRAY") {
+                                         my $kcount = @{$actionData};
+                                         for (my $k = 0 ; $k < $kcount; $k++)
+                                            {
+                                               if ($action =~ /$actionData->[$k]->{'android:name'}/ )
+                                                {
+                                                    $xgForceReceiverIntentActionMap{$action} = 1;
+                                                    last;
+                                                } else {
+                                                    $xgForceReceiverIntentActionMap{$action} = 0;
+                                                }
+                                            }
+                                    }
+                            }
+
                         }
 
                         $xgReceiverMap{$receiver} = 1;
@@ -251,7 +292,7 @@ sub checkReceiver
             {
                 if ($value == 0)
                 {
-                    printf "$key is not exist \n";
+                    printf "$key is not exist ========= \n";
                 }
             }
 
@@ -259,15 +300,13 @@ sub checkReceiver
             {
                 if ($value == 0)
                 {
-                    printf "$key is not exist \n";
+                    printf "$key is not exist ==========\n";
                 }
             }
         } elsif (ref($receiverData) eq "HASH") {
-
-
             foreach my $receiver (@xgForceReceiverList)
             {
-                    if ($receiverData->{"android:name"} eq $receiver)
+                    if ($receiver =~ /$receiverData->{"android:name"}/ )
                     {
                         #检查XGPushReceiver的Intent
                         my $intentFilter = $receiverData->{"intent-filter"};
@@ -283,7 +322,7 @@ sub checkReceiver
                                     my $kcount = @{$actionList};
                                     for (my $k = 0 ; $k < $kcount; $k++)
                                     {
-                                        if ($actionList->[$k]->{'android:name'} eq $action)
+                                        if ($action =~ /$actionList->[$k]->{'android:name'}/)
                                         {
                                             $xgForceReceiverIntentActionMap{$action} = 1;
                                             last;
