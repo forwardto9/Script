@@ -10,6 +10,8 @@ use utf8;
 if ($^O =~ /MSWin/)
 {
     binmode(STDOUT, ":encoding(gbk)");
+}else {
+    binmode(STDOUT, ":encoding(utf8)");
 }
 
 sub checkReceiver;
