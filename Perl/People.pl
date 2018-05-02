@@ -18,14 +18,14 @@ sub setPackage {
 };
 
 sub getPackage {
-	$self = shift;
-   while (($key, $value) = each(%$self)) {
+	my $self = shift;
+   while (my($key, $value) = each(%$self)) {
 		if(ref($value) eq "ARRAY") {
 			printf "result $key:";
-			@v = @{$value};
+			my @v = @{$value};
 			#$#v得到的是数组最后一个索引，不是数组的大小
-			$count = @v;
-			for ($i = 0; $i < $count; $i++) {
+			my $count = @v;
+			for (my $i = 0; $i < $count; $i++) {
 				printf("value[%d] = %s ", $i, $$value[$i]);
 			}
 			printf ("\n");

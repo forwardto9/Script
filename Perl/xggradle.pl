@@ -1,8 +1,9 @@
-#!/usr/bin/perl
+#!/usr/local/bin/perl
 
 use diagnostics;
 use strict;
 use utf8;
+use JSON;
 #use open ':std', ':encoding(UTF-8)';
 
 if ($^O =~ /MSWin/)
@@ -130,6 +131,8 @@ while (my($key, $value) = each(%xgJarInfo))
     }
 }
 
+my $json = encode_json \%xgJarInfo;
+printf ("this is json result:\n $json \n");
 
 
 close(GRADLE);
