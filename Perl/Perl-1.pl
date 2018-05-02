@@ -33,7 +33,3 @@ while (my ($key, $value) =  each(%hashMap)) {
     write;
     #printf ("%s:%s\n", $key, $value);
 }
-
-my $testString = "hi Atom";
-printf($testString);
-printf($testString);
