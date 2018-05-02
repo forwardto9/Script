@@ -1,7 +1,6 @@
 #!/usr/bin/perl
 print "hi perl\n";
 
-
 my $name, my $age, my $salary;
 
 format myformat =
