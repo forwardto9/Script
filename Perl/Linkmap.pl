@@ -1,7 +1,15 @@
 #!/usr/local/bin/perl
+
+# auther:uweiyuan
+# version:1.0.0
+
 use diagnostics;
 use strict;
 
+
+printf("================================\n");
+printf("==== Linkmap.pl <linkmap path> =======\n");
+printf("================================\n");
 
 if (@ARGV)
 {
@@ -136,11 +144,11 @@ foreach my $key (sort desc_sort_ofile(keys(%oFileSize)))
     # printf ("$f", $key, $oFileSize{$key}); #无法完全对齐的原因是大小写字符实际显示的长度
 }
 
-printf("This image size is %s kb", $summerySize/1204);
+printf("This image size is %s kb\n", $summerySize/1204);
 
 } else {
-	printf ("Can't find the Linkmap file paramater in ARGV");
+	printf ("Can't find the Linkmap file paramater in ARGV! \n");
 }
 } else {
-	printf ("ARGV is empty");
+	printf ("ARGV is empty \n");
 }
