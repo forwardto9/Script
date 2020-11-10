@@ -4,7 +4,9 @@ use strict;
 use utf8;
 use Carp;
 use CGI;
-use lib ("/Users/uwei/WorkSpace/ScriptProject/Perl");
+use FindBin;
+use lib "$FindBin::Bin/../Perl";
+#use lib ("/Users/uwei/WorkSpace/GitHub/forwardto9/ScriptStudy/Perl");
 use Me qw(hello goodbye);
 require "People.pl";
 
